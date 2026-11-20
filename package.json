@@ -1,0 +1,68 @@
+{
+  "name": "codex-usage-status-bar",
+  "displayName": "Codex Usage Status Bar",
+  "version": "0.1.2",
+  "description": "See your Codex account quota usage and reset times in the status bar.",
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "codex",
+    "status bar",
+    "usage"
+  ],
+  "license": "MIT",
+  "publisher": "rudy-malhi",
+  "main": "./src/extension.cjs",
+  "scripts": {
+    "test": "node --test test/*.test.cjs",
+    "package": "npx --yes @vscode/vsce@4.1.0 package --no-dependencies --allow-missing-repository",
+    "publish:marketplace": "npm test && npx --yes @vscode/vsce@4.1.0 publish --no-dependencies --allow-missing-repository"
+  },
+  "contributes": {
+    "commands": [
+      {
+        "command": "codexUsage.refresh",
+        "title": "Codex Usage: Refresh"
+      },
+      {
+        "command": "codexUsage.openSettings",
+        "title": "Codex Usage: Open Settings"
+      }
+    ],
+    "configuration": {
+      "title": "Codex Usage",
+      "properties": {
+        "codexUsage.executablePath": {
+          "type": "string",
+          "default": "codex",
+          "scope": "machine",
+          "description": "Codex CLI executable name or absolute path. No arguments or shell expansion. Uses your existing Codex CLI login."
+        },
+        "codexUsage.refreshIntervalSeconds": {
+          "type": "number",
+          "default": 60,
+          "minimum": 30,
+          "maximum": 3600,
+          "scope": "machine",
+          "description": "Seconds between usage refreshes. Click the status bar item to refresh immediately."
+        }
+      }
+    }
+  },
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "extensionKind": [
+    "ui"
+  ],
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": true
+    },
+    "virtualWorkspaces": true
+  }
+}
