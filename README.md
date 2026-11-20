@@ -78,8 +78,15 @@ npm run publish:marketplace
 
 The login command prompts for the token and saves it in the system credential
 store. Do not put it in this project. The publish command runs the tests before
-uploading the extension. For future automated releases, see Microsoft's
+uploading the extension.
+
+For automated releases, configure a Marketplace Trusted Publishing policy for
+publisher `rudy-malhi`, using this repository's GitHub owner and name and the
+workflow filename `publish.yml`. Leave the environment field empty. See
 [Trusted Publishing guidance](https://code.visualstudio.com/api/working-with-extensions/publishing-extension#secure-automated-publishing-to-visual-studio-marketplace).
+Push a tag matching the version in `package.json` (for example, `v0.1.2`) to
+run the workflow. It can also be started manually on that tag. The workflow tests,
+packages, and publishes using GitHub OIDC, without a stored Marketplace token.
 
 ## How it works
 

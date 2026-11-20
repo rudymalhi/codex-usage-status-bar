@@ -1,0 +1,35 @@
+name: Publish extension
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check release tag
+        env:
+          RELEASE_REF: ${{ github.ref }}
+        run: |
+          version=$(node -p "require('./package.json').version")
+          if [ "$RELEASE_REF" != "refs/tags/v$version" ]; then
+            echo "Run this workflow on tag v$version, matching package.json."
+            exit 1
+          fi
+      - name: Test
+        run: npm test
+      - name: Package and publish to VS Code Marketplace
+        run: npx --yes @vscode/vsce@4.1.0 publish --oidc --no-dependencies --allow-missing-repository
