@@ -44,7 +44,7 @@ function renderTooltip(usage, themeKind = 2) {
   text(0, 14, title);
   nodes.push(`<path d="M0 28H320" stroke="${colors.track}"/>`);
   let y = 50;
-  for (const { label, used, reset, elapsed, ahead } of sections) {
+  for (const { label, used, reset, elapsed, ahead, estimated } of sections) {
     text(0, y, label, { weight: 600 });
     if (reset && Number.isFinite(reset.getTime())) {
       const date = reset.toLocaleDateString(undefined, { month: "short", day: "numeric" });
@@ -55,7 +55,7 @@ function renderTooltip(usage, themeKind = 2) {
       `<text x="0" y="${y + 28}" fill="${ahead ? colors.warning : colors.text}" font-size="22" font-weight="700">${used}%<tspan dx="4" fill="${colors.muted}" font-size="12" font-weight="400">used</tspan></text>`,
     );
     if (elapsed !== null && elapsed !== undefined) {
-      text(320, y + 28, `${Math.round(elapsed)}% of period elapsed${ahead ? " · ahead" : ""}`, { size: 12, color: ahead ? colors.warning : colors.muted, anchor: "end" });
+      text(320, y + 28, `${estimated ? "~" : ""}${Math.round(elapsed)}% of period elapsed${ahead ? " · ahead" : ""}`, { size: 12, color: ahead ? colors.warning : colors.muted, anchor: "end" });
     }
     nodes.push(`<rect x="0" y="${y + 40}" width="320" height="4" rx="2" fill="${colors.track}"/>`);
     nodes.push(

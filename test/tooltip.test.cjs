@@ -21,6 +21,13 @@ test("identifies the window whose usage is ahead of elapsed time", () => {
   }
 });
 
+test("marks the monthly budget period as estimated", () => {
+  const usage = formatUsage({ rateLimits: { individualLimit: {
+    remainingPercent: 25, resetsAt: Date.parse("2026-12-01T00:00:00Z") / 1000,
+  } } }, new Date("2026-11-20T00:00:00Z"));
+  assert.match(svg(renderTooltip(usage)), /~63% of period elapsed · ahead/);
+});
+
 test("renders the compact credits card with aligned reset time and proportional progress", () => {
   const usage = formatUsage({
     rateLimits: {

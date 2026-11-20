@@ -14,7 +14,19 @@ test("compares each window's unrounded usage with elapsed time only when the per
   for (const overrides of [{ windowDurationMins: 0 }, { windowDurationMins: "300" }, { resetsAt: undefined }, { resetsAt: reset + 300 * 60 }, { resetsAt: reset - 151 * 60 }]) {
     assert.equal(make(100, overrides).ahead, false);
   }
-  assert.equal(formatUsage({ rateLimits: { individualLimit: { remainingPercent: 0, resetsAt: reset } } }, now).ahead, false);
+});
+
+test("compares individual budgets against an estimated monthly period", () => {
+  const reset = Date.parse("2026-12-01T00:00:00Z") / 1000;
+  const make = (now, remainingPercent = 25, resetsAt = reset) => formatUsage({ rateLimits: { individualLimit: { remainingPercent, resetsAt } } }, new Date(now));
+  const ahead = make("2026-11-20T00:00:00Z");
+  assert.equal(ahead.ahead, true);
+  assert.match(ahead.tooltip, /estimated 63% of period elapsed · usage ahead of period/);
+  assert.equal(make("2026-11-25T00:00:00Z").ahead, false);
+  assert.equal(make("2026-12-02T00:00:00Z").ahead, false);
+  assert.equal(make("2026-11-20T00:00:00Z", 25, null).ahead, false);
+  const marchReset = Date.parse("2024-03-31T00:00:00Z") / 1000;
+  assert.match(make("2024-03-15T12:00:00Z", 25, marchReset).tooltip, /estimated 50% of period elapsed/);
 });
 
 test("shows business budget percentages and actual credits used and remaining", () => {

@@ -31,6 +31,21 @@ function creditDetails(limits) {
   ];
 }
 
+function monthlyElapsed(reset, now) {
+  if (!reset || !Number.isFinite(reset.getTime())) return null;
+  // The protocol supplies the next reset but not the start of the monthly budget.
+  // Subtract a calendar month in UTC, clamping dates such as March 31 to February.
+  const start = new Date(reset);
+  const day = start.getUTCDate();
+  start.setUTCDate(1);
+  start.setUTCMonth(start.getUTCMonth() - 1);
+  const lastDay = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + 1, 0)).getUTCDate();
+  start.setUTCDate(Math.min(day, lastDay));
+  const time = now.getTime();
+  if (!Number.isFinite(time) || time < start.getTime() || time > reset.getTime()) return null;
+  return ((time - start.getTime()) / (reset.getTime() - start.getTime())) * 100;
+}
+
 function formatUsage(result, now = new Date()) {
   // Prefer the general Codex bucket, never accidentally display a model-specific quota.
   const limits = result?.rateLimitsByLimitId?.codex ?? result?.rateLimits;
@@ -52,10 +67,16 @@ function formatUsage(result, now = new Date()) {
   });
   const budget = limits?.individualLimit;
   if (Number.isFinite(budget?.remainingPercent)) {
+    const reset = Number.isFinite(budget.resetsAt) ? new Date(budget.resetsAt * 1000) : null;
+    const elapsed = monthlyElapsed(reset, now);
+    const usedPercent = Math.min(100, Math.max(0, 100 - budget.remainingPercent));
     windows.push({
       label: "Budget",
-      used: Math.round(Math.min(100, Math.max(0, 100 - budget.remainingPercent))),
-      reset: Number.isFinite(budget.resetsAt) ? new Date(budget.resetsAt * 1000) : null,
+      used: Math.round(usedPercent),
+      reset,
+      elapsed,
+      ahead: elapsed !== null && usedPercent > elapsed,
+      estimated: elapsed !== null,
     });
   }
   if (windows.length === 0) {
@@ -88,8 +109,8 @@ function formatUsage(result, now = new Date()) {
     tooltip: [
       "Codex account usage — percent used",
       ...windows.map(
-        ({ label, used, reset, elapsed, ahead }) =>
-          `${label}: ${used}% used (${100 - used}% remaining)${elapsed !== null && elapsed !== undefined ? ` · ${Math.round(elapsed)}% of period elapsed${ahead ? " · usage ahead of period" : ""}` : ""}${reset && Number.isFinite(reset.getTime()) ? ` · resets ${reset.toLocaleString()}` : ""}`,
+        ({ label, used, reset, elapsed, ahead, estimated }) =>
+          `${label}: ${used}% used (${100 - used}% remaining)${elapsed !== null && elapsed !== undefined ? ` · ${estimated ? "estimated " : ""}${Math.round(elapsed)}% of period elapsed${ahead ? " · usage ahead of period" : ""}` : ""}${reset && Number.isFinite(reset.getTime()) ? ` · resets ${reset.toLocaleString()}` : ""}`,
       ),
       "",
       ...creditDetails(limits),

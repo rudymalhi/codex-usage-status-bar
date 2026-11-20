@@ -19,8 +19,9 @@ The tooltip uses a compact card with a plan header, large usage percentages,
 progress bars, and reset times. Its colors follow light and dark editor themes.
 When usage exceeds the elapsed share of a quota window, the status bar is
 highlighted and the tooltip identifies the window and elapsed percentage. This
-comparison requires a valid window duration and reset time; individual budgets
-without a duration are not compared.
+comparison requires a valid window duration and reset time. For individual
+budgets, the elapsed percentage is estimated from the preceding calendar month
+in UTC because Codex supplies a reset time but not the period start.
 Refresh and Settings links are available beneath the card.
 Click to refresh. Usage refreshes every 60 seconds by default. The labels follow
 the quota window durations returned by Codex; they are not hard-coded.
@@ -30,7 +31,7 @@ the quota window durations returned by Codex; they are not hard-coded.
 1. Install the [Codex CLI](https://developers.openai.com/codex/cli) and run
    `codex login` using your ChatGPT account.
 2. In VS Code, run **Extensions: Install from VSIX…** from the Command Palette
-   and select `codex-usage-status-bar-0.1.2.vsix`.
+   and select `codex-usage-status-bar-0.1.3.vsix`.
 3. If VS Code cannot find `codex`, set **Codex Usage: Executable Path** to the
    absolute path printed by `command -v codex` (Windows: `where.exe codex`).
    Use the executable itself, not a command with arguments.
