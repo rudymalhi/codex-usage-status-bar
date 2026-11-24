@@ -21,7 +21,8 @@ When usage exceeds the elapsed share of a quota window, the status bar is
 highlighted and the tooltip identifies the window and elapsed percentage. This
 comparison requires a valid window duration and reset time. For individual
 budgets, the elapsed percentage is estimated from the preceding calendar month
-in UTC because Codex supplies a reset time but not the period start.
+in UTC because Codex supplies a reset time but not the period start. Elapsed
+percentages count only the configured working weekdays, using your local timezone.
 Refresh and Settings links are available beneath the card.
 Click to refresh. Usage refreshes every 60 seconds by default. The labels follow
 the quota window durations returned by Codex; they are not hard-coded.
@@ -42,12 +43,14 @@ not supported. API-key accounts do not provide these ChatGPT quota windows.
 
 ## Settings and commands
 
-| Setting                             | Default | Purpose                                   |
-| ----------------------------------- | ------- | ----------------------------------------- |
-| `codexUsage.executablePath`         | `codex` | CLI executable name or absolute path      |
-| `codexUsage.refreshIntervalSeconds` | `60`    | Refresh interval, from 30 to 3600 seconds |
+| Setting                             | Default      | Purpose                                      |
+| ----------------------------------- | ------------ | -------------------------------------------- |
+| `codexUsage.executablePath`         | `codex`      | CLI executable name or absolute path         |
+| `codexUsage.refreshIntervalSeconds` | `60`          | Refresh interval, from 30 to 3600 seconds    |
+| `codexUsage.workingDays`            | Monday–Friday | Weekdays counted toward elapsed periods      |
 
-Both settings are machine settings so a workspace cannot choose an executable.
+These settings are machine settings so a workspace cannot override them.
+Set `codexUsage.workingDays` to an empty list to disable elapsed comparisons.
 The Command Palette provides **Codex Usage: Refresh** and **Codex Usage: Open Settings**.
 Errors appear in the status bar tooltip, without notification popups. A failed
 refresh replaces the previous usage so old figures are not presented as current.

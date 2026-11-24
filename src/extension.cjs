@@ -42,7 +42,14 @@ function activate(context) {
         signal: controller.signal,
       });
       if (disposed || controller.signal.aborted) return;
-      const usage = formatUsage(result);
+      const workingDays = config.get("workingDays", [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+      ]);
+      const usage = formatUsage(result, new Date(), workingDays);
       lastUsage = usage;
       item.text = usage.text;
       item.backgroundColor = usage.ahead ? new vscode.ThemeColor("statusBarItem.warningBackground") : undefined;

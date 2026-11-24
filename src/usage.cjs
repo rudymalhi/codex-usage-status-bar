@@ -31,7 +31,47 @@ function creditDetails(limits) {
   ];
 }
 
-function monthlyElapsed(reset, now) {
+const WEEKDAYS = {
+  Sunday: 0,
+  Monday: 1,
+  Tuesday: 2,
+  Wednesday: 3,
+  Thursday: 4,
+  Friday: 5,
+  Saturday: 6,
+};
+
+function selectedWeekdays(value) {
+  if (!Array.isArray(value)) return [1, 2, 3, 4, 5];
+  return [...new Set(value.map((day) => WEEKDAYS[day]).filter(Number.isInteger))];
+}
+
+function elapsedOnWorkingDays(start, end, now, workingDays) {
+  if (!start || !end || !Number.isFinite(start.getTime()) || !Number.isFinite(end.getTime())) return null;
+  const periodStart = start.getTime();
+  const periodEnd = end.getTime();
+  const current = now.getTime();
+  if (periodEnd <= periodStart || !Number.isFinite(current) || current < periodStart || current > periodEnd || workingDays.length === 0) return null;
+
+  let total = 0;
+  let elapsed = 0;
+  const day = new Date(periodStart);
+  day.setHours(0, 0, 0, 0);
+  while (day.getTime() < periodEnd) {
+    const dayStart = day.getTime();
+    day.setDate(day.getDate() + 1);
+    const dayEnd = day.getTime();
+    if (workingDays.includes(new Date(dayStart).getDay())) {
+      const segmentStart = Math.max(periodStart, dayStart);
+      const segmentEnd = Math.min(periodEnd, dayEnd);
+      total += segmentEnd - segmentStart;
+      elapsed += Math.max(0, Math.min(current, segmentEnd) - segmentStart);
+    }
+  }
+  return total > 0 ? (elapsed / total) * 100 : null;
+}
+
+function monthlyStart(reset) {
   if (!reset || !Number.isFinite(reset.getTime())) return null;
   // The protocol supplies the next reset but not the start of the monthly budget.
   // Subtract a calendar month in UTC, clamping dates such as March 31 to February.
@@ -41,12 +81,15 @@ function monthlyElapsed(reset, now) {
   start.setUTCMonth(start.getUTCMonth() - 1);
   const lastDay = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + 1, 0)).getUTCDate();
   start.setUTCDate(Math.min(day, lastDay));
-  const time = now.getTime();
-  if (!Number.isFinite(time) || time < start.getTime() || time > reset.getTime()) return null;
-  return ((time - start.getTime()) / (reset.getTime() - start.getTime())) * 100;
+  return start;
 }
 
-function formatUsage(result, now = new Date()) {
+function formatUsage(
+  result,
+  now = new Date(),
+  configuredWorkingDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+) {
+  const workingDays = selectedWeekdays(configuredWorkingDays);
   // Prefer the general Codex bucket, never accidentally display a model-specific quota.
   const limits = result?.rateLimitsByLimitId?.codex ?? result?.rateLimits;
   const windows = [
@@ -59,8 +102,11 @@ function formatUsage(result, now = new Date()) {
     const reset = Number.isFinite(window.resetsAt) ? new Date(window.resetsAt * 1000) : null;
     const duration = Number.isFinite(window.windowDurationMins) ? window.windowDurationMins * 60 * 1000 : NaN;
     const remaining = reset?.getTime() - now.getTime();
+    const start = reset && Number.isFinite(duration) && duration > 0
+      ? new Date(reset.getTime() - duration)
+      : null;
     const elapsed = Number.isFinite(duration) && duration > 0 && Number.isFinite(remaining) && remaining >= 0 && remaining <= duration
-      ? (1 - remaining / duration) * 100
+      ? elapsedOnWorkingDays(start, reset, now, workingDays)
       : null;
     const ahead = elapsed !== null && Math.min(100, Math.max(0, window.usedPercent)) > elapsed;
     return [{ label: windowLabel(window.windowDurationMins, fallback), used, reset, elapsed, ahead }];
@@ -68,7 +114,7 @@ function formatUsage(result, now = new Date()) {
   const budget = limits?.individualLimit;
   if (Number.isFinite(budget?.remainingPercent)) {
     const reset = Number.isFinite(budget.resetsAt) ? new Date(budget.resetsAt * 1000) : null;
-    const elapsed = monthlyElapsed(reset, now);
+    const elapsed = elapsedOnWorkingDays(monthlyStart(reset), reset, now, workingDays);
     const usedPercent = Math.min(100, Math.max(0, 100 - budget.remainingPercent));
     windows.push({
       label: "Budget",

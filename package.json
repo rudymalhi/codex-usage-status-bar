@@ -1,7 +1,7 @@
 {
   "name": "codex-usage-status-bar",
   "displayName": "Codex Usage Status Bar",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "See your Codex account quota usage and reset times in the status bar.",
   "categories": [
     "Other"
@@ -46,6 +46,16 @@
           "maximum": 3600,
           "scope": "machine",
           "description": "Seconds between usage refreshes. Click the status bar item to refresh immediately."
+        },
+        "codexUsage.workingDays": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+          },
+          "default": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+          "scope": "machine",
+          "description": "Weekdays included when calculating the elapsed share of quota and budget periods. An empty list disables elapsed comparisons."
         }
       }
     }
