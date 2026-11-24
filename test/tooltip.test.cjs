@@ -9,10 +9,11 @@ function svg(markdown) {
 
 test("identifies the window whose usage is ahead of elapsed time", () => {
   const now = new Date("2026-11-20T12:00:00Z");
+  const allDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
   const usage = formatUsage({ rateLimits: {
     primary: { usedPercent: 75, windowDurationMins: 300, resetsAt: now.getTime() / 1000 + 150 * 60 },
     secondary: { usedPercent: 25, windowDurationMins: 300, resetsAt: now.getTime() / 1000 + 150 * 60 },
-  } }, now);
+  } }, now, allDays);
   for (const theme of [1, 2]) {
     const card = svg(renderTooltip(usage, theme));
     assert.match(card, /50% of period elapsed · ahead/);
@@ -22,9 +23,10 @@ test("identifies the window whose usage is ahead of elapsed time", () => {
 });
 
 test("marks the monthly budget period as estimated", () => {
+  const allDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
   const usage = formatUsage({ rateLimits: { individualLimit: {
     remainingPercent: 25, resetsAt: Date.parse("2026-12-01T00:00:00Z") / 1000,
-  } } }, new Date("2026-11-20T00:00:00Z"));
+  } } }, new Date("2026-11-20T00:00:00Z"), allDays);
   assert.match(svg(renderTooltip(usage)), /~63% of period elapsed · ahead/);
 });
 

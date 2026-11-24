@@ -5,7 +5,8 @@ const { formatUsage } = require("../src/usage.cjs");
 test("compares each window's unrounded usage with elapsed time only when the period is known", () => {
   const now = new Date("2026-11-20T12:00:00Z");
   const reset = now.getTime() / 1000 + 150 * 60;
-  const make = (usedPercent, overrides = {}) => formatUsage({ rateLimits: { primary: { usedPercent, windowDurationMins: 300, resetsAt: reset, ...overrides } } }, now);
+  const allDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+  const make = (usedPercent, overrides = {}) => formatUsage({ rateLimits: { primary: { usedPercent, windowDurationMins: 300, resetsAt: reset, ...overrides } } }, now, allDays);
   assert.equal(make(50).ahead, false);
   const ahead = make(50.1);
   assert.equal(ahead.ahead, true);
@@ -18,7 +19,8 @@ test("compares each window's unrounded usage with elapsed time only when the per
 
 test("compares individual budgets against an estimated monthly period", () => {
   const reset = Date.parse("2026-12-01T00:00:00Z") / 1000;
-  const make = (now, remainingPercent = 25, resetsAt = reset) => formatUsage({ rateLimits: { individualLimit: { remainingPercent, resetsAt } } }, new Date(now));
+  const allDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+  const make = (now, remainingPercent = 25, resetsAt = reset) => formatUsage({ rateLimits: { individualLimit: { remainingPercent, resetsAt } } }, new Date(now), allDays);
   const ahead = make("2026-11-20T00:00:00Z");
   assert.equal(ahead.ahead, true);
   assert.match(ahead.tooltip, /estimated 63% of period elapsed · usage ahead of period/);
@@ -27,6 +29,32 @@ test("compares individual budgets against an estimated monthly period", () => {
   assert.equal(make("2026-11-20T00:00:00Z", 25, null).ahead, false);
   const marchReset = Date.parse("2024-03-31T00:00:00Z") / 1000;
   assert.match(make("2024-03-15T12:00:00Z", 25, marchReset).tooltip, /estimated 50% of period elapsed/);
+});
+
+test("counts only selected weekdays when calculating quota period elapsed time", () => {
+  const start = new Date(2026, 10, 16, 0, 0, 0);
+  const now = new Date(2026, 10, 19, 12, 0, 0);
+  const reset = new Date(2026, 10, 23, 0, 0, 0);
+  const result = { rateLimits: { primary: {
+    usedPercent: 70,
+    windowDurationMins: (reset - start) / 60000,
+    resetsAt: reset.getTime() / 1000,
+  } } };
+  const usage = formatUsage(result, now, ["Monday", "Wednesday", "Friday"]);
+  assert.ok(Math.abs(usage.card.sections[0].elapsed - (200 / 3)) < 0.001);
+  assert.equal(usage.ahead, true);
+});
+
+test("disables elapsed comparisons when no working days are selected", () => {
+  const now = new Date("2026-11-20T12:00:00Z");
+  const reset = now.getTime() / 1000 + 150 * 60;
+  const usage = formatUsage({ rateLimits: { primary: {
+    usedPercent: 100,
+    windowDurationMins: 300,
+    resetsAt: reset,
+  } } }, now, []);
+  assert.equal(usage.card.sections[0].elapsed, null);
+  assert.equal(usage.ahead, false);
 });
 
 test("shows business budget percentages and actual credits used and remaining", () => {

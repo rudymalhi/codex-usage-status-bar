@@ -32,7 +32,7 @@ the quota window durations returned by Codex; they are not hard-coded.
 1. Install the [Codex CLI](https://developers.openai.com/codex/cli) and run
    `codex login` using your ChatGPT account.
 2. In VS Code, run **Extensions: Install from VSIX…** from the Command Palette
-   and select `codex-usage-status-bar-0.1.3.vsix`.
+   and select `codex-usage-status-bar-0.1.5.vsix`.
 3. If VS Code cannot find `codex`, set **Codex Usage: Executable Path** to the
    absolute path printed by `command -v codex` (Windows: `where.exe codex`).
    Use the executable itself, not a command with arguments.

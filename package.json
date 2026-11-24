@@ -1,7 +1,7 @@
 {
   "name": "codex-usage-status-bar",
   "displayName": "Codex Usage Status Bar",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "See your Codex account quota usage and reset times in the status bar.",
   "categories": [
     "Other"
